@@ -66,7 +66,7 @@ def about(subject):
     # BEGIN PROBLEM 2
     "*** YOUR CODE HERE ***"
     def isRelated(paragraph):
-        paragraph_modified=lower(remove_punctuation(paragraph))
+        paragraph_modified = lower(remove_punctuation(paragraph))
         paragraph_list = split(paragraph_modified)
         for word in paragraph_list:
             if word in subject:
@@ -135,6 +135,8 @@ def wpm(typed, elapsed):
     assert elapsed > 0, "Elapsed time must be positive"
     # BEGIN PROBLEM 4
     "*** YOUR CODE HERE ***"
+    return (len(typed)/5 /elapsed*60)
+
     # END PROBLEM 4
 
 
