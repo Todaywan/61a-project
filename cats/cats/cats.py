@@ -167,6 +167,15 @@ def memo_diff(diff_function):
     def memoized(typed, source, limit):
         # BEGIN PROBLEM EC
         "*** YOUR CODE HERE ***"
+        immutable_args = (typed, source)
+        
+        if immutable_args not in cache:
+            result = diff_function(typed, source, limit)
+            if result <= limit:
+                cache[immutable_args] = result
+            return min(result, limit + 1)
+        result = cache[immutable_args]
+        return min(result, limit + 1)
         # END PROBLEM EC
 
     return memoized
@@ -176,7 +185,7 @@ def memo_diff(diff_function):
 # Phase 2 #
 ###########
 
-
+@memo
 def autocorrect(typed_word, word_list, diff_function, limit):
     """Returns the element of WORD_LIST that has the smallest difference
     from TYPED_WORD based on DIFF_FUNCTION. If multiple words are tied for the smallest difference,
@@ -198,14 +207,15 @@ def autocorrect(typed_word, word_list, diff_function, limit):
     """
     # BEGIN PROBLEM 5
     "*** YOUR CODE HERE ***"
+    word_indices = range(len(word_list))
     if typed_word in word_list:
         return typed_word
     else:
-        min_dif = min([diff_function(typed_word, word, limit) for word in word_list ])
-        if min_dif > limit:
-            return typed_word
+        min_index = min([i for i in word_indices], key=lambda i : diff_function(typed_word, word_list[i], limit))
+        if diff_function(typed_word, word_list[min_index], limit) <= limit:
+            return word_list[min_index]
         else:
-            return min([word for word in word_list], key=lambda wd : diff_function(typed_word, wd, limit))
+            return typed_word
     # END PROBLEM 5
 
 
@@ -248,7 +258,7 @@ def furry_fixes(typed, source, limit):
 
     # END PROBLEM 6
 
-
+@memo_diff
 def minimum_mewtations(typed, source, limit):
     """A diff function for autocorrect that computes the edit distance from TYPED to SOURCE.
     This function takes in a string TYPED, a string SOURCE, and a number LIMIT.
@@ -266,23 +276,29 @@ def minimum_mewtations(typed, source, limit):
     >>> minimum_mewtations("ckiteus", "kittens", big_limit) # ckiteus -> kiteus -> kitteus -> kittens
     3
     """
-    if typed == source or limit < 0: # Base cases should go here, you may add more base cases as needed.   
-        return 0
-  
-    lent, lens = len(typed), len(source)
-    if lent == 0 or lens == 0:
-        return min(lent + lens, limit + 1)
 
-    if typed[0] == source[0]:
-        return minimum_mewtations(typed[1:], source[1:], limit)
-    if typed[-1] == source[-1]:
-        return minimum_mewtations(typed[:-1], source[:-1], limit)
-    else:
-        add = minimum_mewtations(typed[:], source[1:], limit - 1)
-        remove = minimum_mewtations(typed[1:], source[:], limit - 1)
-        substitute = minimum_mewtations(typed[1:], source[1:], limit - 1)
+    if typed != source and limit <= 0:
+        return 1
+    no_occ = 0
+    for c in source:
+        if c not in typed:
+            no_occ += 1
+            if no_occ > limit:
+                return limit + 1
+    
+    while len(typed) > 0 and len(source) > 0 and typed[0] == source[0]:
+        typed, source = typed[1:], source[1:]
+    while len(typed) > 0 and len(source) > 0 and typed[-1] == source[-1]:
+        typed, source = typed[:-1], source[:-1]
+
+    if len(typed) == 0 or len(source) == 0:
+        return len(typed) + len(source)
+    
+    add = minimum_mewtations(typed[:], source[1:], limit - 1)
+    remove = minimum_mewtations(typed[1:], source[:], limit - 1)
+    substitute = minimum_mewtations(typed[1:], source[1:], limit - 1)
         
-        return 1 + min(add, remove, substitute)
+    return 1 + min(add, remove, substitute)
 
 
 # Ignore the line below
@@ -328,6 +344,16 @@ def report_progress(typed, source, user_id, upload):
     """
     # BEGIN PROBLEM 8
     "*** YOUR CODE HERE ***"
+    total_typed = len(typed)
+    correctly_typed = 0
+    while correctly_typed < total_typed and typed[correctly_typed] == source[correctly_typed]:
+        correctly_typed += 1
+
+    progress = correctly_typed / len(source)
+    d = {'id': user_id, 'progress': progress}
+    upload(d)
+    return progress
+
     # END PROBLEM 8
 
 
@@ -351,7 +377,7 @@ def time_per_word(words, timestamps_per_player):
     """
     tpp = timestamps_per_player  # A shorter name (for convenience)
     # BEGIN PROBLEM 9
-    times = []  # You may remove this line
+    times = [[tpp[i][j+1] - tpp[i][j] for j in range(len(tpp[0])-1)] for i in range(len(tpp))]
     # END PROBLEM 9
     return {'words': words, 'times': times}
 
@@ -379,6 +405,11 @@ def fastest_words(words_and_times):
     word_indices = range(len(words))    # contains an *index* for each word
     # BEGIN PROBLEM 10
     "*** YOUR CODE HERE ***"
+    ans = [[] for i in player_indices]
+    for i in word_indices:
+        fastest_player = min([j for j in player_indices], key=lambda j : get_time(times, j, i))
+        ans[fastest_player].append(words[i])
+    return ans
     # END PROBLEM 10
 
 
