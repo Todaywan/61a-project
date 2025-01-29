@@ -198,6 +198,14 @@ def autocorrect(typed_word, word_list, diff_function, limit):
     """
     # BEGIN PROBLEM 5
     "*** YOUR CODE HERE ***"
+    if typed_word in word_list:
+        return typed_word
+    else:
+        min_dif = min([diff_function(typed_word, word, limit) for word in word_list ])
+        if min_dif > limit:
+            return typed_word
+        else:
+            return min([word for word in word_list], key=lambda wd : diff_function(typed_word, wd, limit))
     # END PROBLEM 5
 
 
@@ -224,7 +232,20 @@ def furry_fixes(typed, source, limit):
     5
     """
     # BEGIN PROBLEM 6
-    assert False, 'Remove this line'
+    
+    
+    len_t, len_s = len(typed), len(source)
+    if len_t == 0 or len_s == 0:
+        return len_t + len_s
+    if limit < 0:
+        return 0    
+    
+    is_dif = int(typed[0] != source[0])
+    return is_dif + furry_fixes(typed[1:], source[1:], limit - is_dif)
+
+
+
+
     # END PROBLEM 6
 
 
@@ -245,23 +266,23 @@ def minimum_mewtations(typed, source, limit):
     >>> minimum_mewtations("ckiteus", "kittens", big_limit) # ckiteus -> kiteus -> kitteus -> kittens
     3
     """
-    assert False, 'Remove this line'
-    if ___________: # Base cases should go here, you may add more base cases as needed.
-        # BEGIN
-        "*** YOUR CODE HERE ***"
-        # END
-    # Recursive cases should go below here
-    if ___________: # Feel free to remove or add additional cases
-        # BEGIN
-        "*** YOUR CODE HERE ***"
-        # END
+    if typed == source or limit < 0: # Base cases should go here, you may add more base cases as needed.   
+        return 0
+  
+    lent, lens = len(typed), len(source)
+    if lent == 0 or lens == 0:
+        return min(lent + lens, limit + 1)
+
+    if typed[0] == source[0]:
+        return minimum_mewtations(typed[1:], source[1:], limit)
+    if typed[-1] == source[-1]:
+        return minimum_mewtations(typed[:-1], source[:-1], limit)
     else:
-        add = ... # Fill in these lines
-        remove = ...
-        substitute = ...
-        # BEGIN
-        "*** YOUR CODE HERE ***"
-        # END
+        add = minimum_mewtations(typed[:], source[1:], limit - 1)
+        remove = minimum_mewtations(typed[1:], source[:], limit - 1)
+        substitute = minimum_mewtations(typed[1:], source[1:], limit - 1)
+        
+        return 1 + min(add, remove, substitute)
 
 
 # Ignore the line below
@@ -271,7 +292,7 @@ minimum_mewtations = count(minimum_mewtations)
 def final_diff(typed, source, limit):
     """A diff function that takes in a string TYPED, a string SOURCE, and a number LIMIT.
     If you implement this function, it will be used."""
-    assert False, "Remove this line to use your final_diff function."
+    return minimum_mewtations(typed, source, limit)
 
 
 FINAL_DIFF_LIMIT = 6  # REPLACE THIS WITH YOUR LIMIT
